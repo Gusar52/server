@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 from http_server import handle_client
+import os
 
 
 def run_server(port=8080) -> None:
@@ -13,6 +14,32 @@ def run_server(port=8080) -> None:
         thread = threading.Thread(target=serve_client, args=(client_socket, cid))
         thread.start()
         cid += 1
+
+# статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
+# |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
+
+def serve_static_file(path):
+    content_type = None
+    if path.endswith('.html'):
+        content_type = 'text/html'
+    elif path.endswith('.css'):
+        content_type = 'text/css'
+    elif path.endswith('.js'):
+        content_type = 'application/javascript'
+    elif path.endswith('.png'):
+        content_type = 'image/png'
+    elif path.endswith('.jpg') or path.endswith('.jpeg'):
+        content_type = 'image/jpeg'
+
+    with open(path, 'rb') as f:
+        content = f.read()
+
+    return (
+            f"HTTP/1.1 200 OK\r\n"
+            f"Content-Type: {content_type}\r\n"
+            f"Content-Length: {len(content)}\r\n"
+            f"\r\n".encode() + content
+    )
 
 
 def serve_client(client_socket, cid):
