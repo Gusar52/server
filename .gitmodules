@@ -1,0 +1,3 @@
+[submodule "http_server"]
+	path = http_server
+	url = https://github.com/Gusar52/codecrafters-http-server-python.git
