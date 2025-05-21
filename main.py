@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 from src.http_server import handle_client
+from functools import lru_cache
 
 
 def load_config():
@@ -35,7 +36,16 @@ def run_server() -> None:
 # статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
 # |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
 
+@lru_cache(maxsize=52)
+def get_content(path):
+    with open(path, "rb") as f:
+        return f.read()
+
 def serve_static_file(path):
+    content = get_content(path)
+    if not content:
+        return "HTTP/1.1 404"
+    
     content_type = None
     if path.endswith('.html'):
         content_type = 'text/html'
