@@ -101,7 +101,7 @@ def handle_client(client_socket):
 
     client_socket.sendall(response.encode())
 
-    client_socket.close()
+    # client_socket.close()
 
 
 def main():

@@ -1,8 +1,9 @@
 import socket
 import threading
 import time
-from http_server import handle_client
+from src.http_server import handle_client
 import os
+import select
 
 
 def run_server(port=8080) -> None:
@@ -42,50 +43,34 @@ def serve_static_file(path):
     )
 
 
-def serve_client(client_socket, cid):
+def serve_client(client_socket: socket, cid: int):
     try:
-        class LoggingSocket:
-            def __init__(self, sock):
-                self.sock = sock
-                self.response_data = b""
-
-            def recv(self, *args):
-                data = self.sock.recv(*args)
-                if data:
-                    print(f"\n[Client #{cid}] REQUEST:\n{data.decode()}\n")
-                return data
-
-            def sendall(self, data):
-                self.response_data += data
-                print(f"[Client #{cid}] RESPONSE:\n{data.decode()}\n")
-                return self.sock.sendall(data)
-
-            def close(self):
-                return self.sock.close()
-
-            def __getattr__(self, name):
-                return getattr(self.sock, name)
-
-        logging_socket = LoggingSocket(client_socket)
-
-        handle_client(logging_socket)
-
-        print(f"Client #{cid} has been served")
-    except Exception as e:
-        print(f"Error serving client #{cid}: {e}")
-    finally:
-        client_socket.close()
+      while True:
+        request = read_request(client_socket, cid)
+        if request is None:
+            print(f"Client #{cid} disconnected")
+            client_socket.close()
+            break
+        else:
+            handle_client(client_socket)
 
 
-def read_request(client_socket: socket, delimiter=b"!") -> bytearray:
+
+    except ConnectionResetError:
+        return None
+    except:
+        raise   
+        
+
+def read_request(client_socket: socket, cid: int, delimiter=b"!") -> bytearray:
     request = bytearray()
     try:
         while True:
-            chunk = client_socket.recv(1024)
-            print(chunk)
-            if not chunk:
+            request_data = client_socket.recv(1024)
+            print(f"\n[Client #{cid}] REQUEST:\n{request_data.decode()}\n")
+            if not request_data:
                 return None
-            request += chunk
+            request += request_data
             if delimiter in request:
                 return request
     except ConnectionResetError:
