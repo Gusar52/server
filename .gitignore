@@ -1,1 +1,11 @@
-.venv
+/.env
+/.venv
+/.idea
+__pycache__/
+*/__pycache__/
+/venv
+/src/__pycache__
+/src/http_server/__pycache__
+/src/http_server/static/__pycache__
+/src/http_server/templates/__pycache__
+/src/http_server/utils/__pycache__
