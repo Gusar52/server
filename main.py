@@ -1,14 +1,30 @@
 import socket
 import threading
-import time
+import json
 from src.http_server import handle_client
-import os
-import select
 
 
-def run_server(port=8080) -> None:
-    server_socket = create_server_socket(port)
+def load_config():
+    try:
+        with open('config.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print("Файл конфигурации не найден, используются значения по умолчанию")
+        return {
+            "server": {
+                "port": 8080,
+                "host": "0.0.0.0"
+            }
+        }
+
+
+def run_server() -> None:
+    config = load_config()
+    server_config = config['server']
+    server_socket = create_server_socket(server_config['host'], server_config['port'])
     cid = 0
+
+    print(f"Сервер запущен на {server_config['host']}:{server_config['port']}")
 
     while True:
         client_socket = accept_client_connection(server_socket, cid)
@@ -75,15 +91,23 @@ def read_request(client_socket: socket, cid: int, delimiter=b"!") -> bytearray:
                 return request
     except ConnectionResetError:
         return None
-    except:
+    except Exception as e:
+        print(f"Ошибка при чтении запроса от клиента #{cid}: {e}")
         raise
 
 
-def create_server_socket(server_port) -> socket:
+def create_server_socket(host: str, port: int) -> socket:
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, proto=0)
-    server_socket.bind(("", server_port))
-    server_socket.listen()
-    return server_socket
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        server_socket.bind((host, port))
+        server_socket.listen()
+        return server_socket
+    except OSError as e:
+        print(f"Ошибка при создании сервера: {e}")
+        print("Попытка использовать другой порт...")
+        server_socket.close()
+        return create_server_socket(host, port + 1)
 
 
 def accept_client_connection(server_socket: socket, cid: int) -> socket:
