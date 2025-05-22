@@ -1,3 +1,4 @@
+import os
 import socket
 import threading
 import json
@@ -54,6 +55,10 @@ def get_content(path):
         return f.read()
 
 def serve_static_file(path):
+    
+    if os.path.isdir(path):
+            return generate_directory_listing(path)
+    
     content = get_content(path)
     if not content:
         return "HTTP/1.1 404"
@@ -76,6 +81,28 @@ def serve_static_file(path):
             f"Content-Length: {len(content)}\r\n"
             f"\r\n".encode() + content
     )
+    
+def generate_directory_listing(directory_path):
+    try:
+        files = os.listdir(directory_path)
+        html = f"<html><head><title>Index of {directory_path}</title></head><body><h1>Index of {directory_path}</h1><ul>"
+        for f in files:
+            full_path = os.path.join(directory_path, f)
+            if os.path.isdir(full_path):
+                f += "/"
+            html += f'<li><a href="{f}">{f}</a></li>'
+        html += "</ul></body></html>"
+        
+        return (
+            f"HTTP/1.1 200 OK\r\n"
+            f"Content-Type: text/html\r\n"
+            f"Content-Length: {len(html)}\r\n"
+            f"\r\n{html}".encode()
+        )
+    except OSError:
+        return "HTTP/1.1 403 Forbidden\r\n\r\n".encode()   
+    
+     
 
 
 def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerManager):
