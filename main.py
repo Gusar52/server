@@ -58,9 +58,6 @@ def serve_static_file(path):
     elif path.endswith('.jpg') or path.endswith('.jpeg'):
         content_type = 'image/jpeg'
 
-    with open(path, 'rb') as f:
-        content = f.read()
-
     return (
             f"HTTP/1.1 200 OK\r\n"
             f"Content-Type: {content_type}\r\n"
