@@ -11,13 +11,13 @@ if "--directory" in sys.argv:
         directory = sys.argv[idx + 1]
 
 
-def handle_client(client_socket):
+def handle_client(client_socket: socket):
     request_data = client_socket.recv(1024).decode()
     lines = request_data.split("\r\n")
     request_line = lines[0]
     method, path, _ = request_line.split(" ")
     headers = {}
-
+    print(method, path)
     for line in lines[1:]:
         if ": " in line:
             key, value = line.split(": ", 1)
@@ -101,27 +101,3 @@ def handle_client(client_socket):
 
     client_socket.sendall(response.encode())
 
-    # client_socket.close()
-
-
-def main():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(('localhost', 4221))
-    server_socket.listen(5)
-    print("Server listening on port 4221...")
-
-    try:
-        while True:
-            client_socket, client_address = server_socket.accept()
-            print(f"Connection from {client_address}")
-            thread = threading.Thread(target=handle_client, args=(client_socket,))
-            thread.start()
-    except KeyboardInterrupt:
-        print("\nShutting down server...")
-    finally:
-        server_socket.close()
-
-
-if __name__ == "__main__":
-    main()

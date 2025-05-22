@@ -1,6 +1,18 @@
 {
-    "server": {
+    "server": [
+      {
       "port": 8080,
-      "host": "0.0.0.0"      
+      "host": "127.0.0.1",    
+      "server_name": "Test1.com",
+      "root": "пока хз",
+      "index": "index.html"
+    },
+    {
+      "port": 8080,
+      "host": "127.0.0.1",    
+      "server_name": "Test2.com",
+      "root": "пока хз",
+      "index": "index.html"
     }
-  }
+  ]
+}

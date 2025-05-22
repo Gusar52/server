@@ -1,6 +1,8 @@
 import socket
 import threading
 import json
+from select import select
+from src.virtual_server_manager import VirtualServerManager
 from src.http_server import handle_client
 from functools import lru_cache
 
@@ -14,22 +16,32 @@ def load_config():
         return {
             "server": {
                 "port": 8080,
-                "host": "0.0.0.0"
+                "host": "0.0.0.0",
+                "server_name": "Test1.com",
+                "root": "пока хз",
+                "index": "index.html"
             }
         }
 
 
 def run_server() -> None:
     config = load_config()
-    server_config = config['server']
-    server_socket = create_server_socket(server_config['host'], server_config['port'])
+    server_manager = VirtualServerManager(config)
+    
+    server_sockets = {}
+    for server_config in config['server']:
+        port = server_config['port']
+        if port not in server_sockets:
+            server_sockets[port] = create_server_socket(server_config['host'], port)
+            print(f"Сервер запущен на {server_config['host']}:{server_config['port']}")
+    
     cid = 0
 
-    print(f"Сервер запущен на {server_config['host']}:{server_config['port']}")
-
     while True:
-        client_socket = accept_client_connection(server_socket, cid)
-        thread = threading.Thread(target=serve_client, args=(client_socket, cid))
+        read_sockets, _, _ = select(list(server_sockets.values()), [], [])
+        for server_socket in read_sockets:
+            client_socket = accept_client_connection(server_socket, cid)
+            thread = threading.Thread(target=serve_client, args=(client_socket, cid, server_manager))
         thread.start()
         cid += 1
 
@@ -66,7 +78,7 @@ def serve_static_file(path):
     )
 
 
-def serve_client(client_socket: socket, cid: int):
+def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerManager):
     try:
       while True:
         request = read_request(client_socket, cid)
@@ -75,6 +87,7 @@ def serve_client(client_socket: socket, cid: int):
             client_socket.close()
             break
         else:
+            print(client_socket)
             handle_client(client_socket)
 
 
