@@ -5,7 +5,8 @@
       "host": "127.0.0.1",    
       "server_name": "localhost",
       "root": "Test1",
-      "index": "index.html" 
+      "index": "index.html"
+
     },
     {
       "port": 8080,
@@ -13,6 +14,12 @@
       "server_name": "Test2.com",
       "root": "Test2",
       "index": "index.html"
+    },
+    {
+      "port": 8080,
+      "host": "127.0.0.1",    
+      "server_name": "proxy.com",
+      "proxy_pass": "http://127.0.0.1:3000"
     }
   ]
 }

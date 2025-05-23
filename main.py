@@ -11,29 +11,20 @@ def load_config():
         with open('config.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        print("Файл конфигурации не найден, используются значения по умолчанию")
-        return {
-            "server": {
-                "port": 8080,
-                "host": "0.0.0.0",
-                "server_name": "Test1.com",
-                "root": "пока хз",
-                "index": "index.html"
-            }
-        }
+        raise ("Файл конфигурации не найден")
 
 
 def run_server() -> None:
     config = load_config()
     server_manager = VirtualServerManager(config)
-    
+
     server_sockets = []
     for server_config in config['server']:
         port = server_config['port']
         if port not in server_sockets:
             server_sockets.append(create_server_socket(server_config['host'], port))
-            print(f"Сервер запущен на {server_config['host']}:{server_config['port']}")
-    
+            print(f"Сервер {server_config['server_name']} запущен на {server_config['host']}:{server_config['port']}")
+
     cid = 0
 
     while True:
@@ -46,7 +37,7 @@ def run_server() -> None:
 
 
 def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerManager):
-    try:        
+    try:
         while True:
             request = read_request(client_socket, cid)
             request_str = request.decode()
@@ -55,7 +46,6 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
                 if ': ' in line:
                     key, value = line.split(': ', 1)
                     headers[key] = value
-            # print(f"---------------------{headers}--------------------------")
             server_name = headers.get('Host', '').split(':')[0]
             server_config = server_manager.find_server(server_name)
             if request is None:
@@ -71,13 +61,11 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
                     response = "HTTP/1.1 404 Not Found\r\n\r\n"
                     client_socket.sendall(response.encode())
 
-
-
     except ConnectionResetError:
         return None
     except:
-        raise   
-        
+        raise
+
 
 def read_request(client_socket: socket, cid: int, delimiter=b"") -> bytearray:
     request = bytearray()

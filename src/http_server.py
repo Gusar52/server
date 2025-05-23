@@ -24,8 +24,8 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
             key, value = line.split(": ", 1)
             headers[key] = value
 
-    # if path == "/":
-    #     response = "HTTP/1.1 200 OK\r\n\r\n"
+    if path == "/":
+        response = "HTTP/1.1 200 OK\r\n\r\n"
 
     if method == "POST" and path.startswith("/files/"):
         filename = path[len("/files/"):]
@@ -91,7 +91,6 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
         )
 
     else:
-        # Пробуем обработать как статический файл
         root = server_config['root']
         file_path = root +  os.path.join(directory, path.lstrip('/'))
         print(f"-----------------------{file_path}-----------------------")
@@ -113,11 +112,15 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
 def get_content(path):
     with open(path, "rb") as f:
         return f.read()
+    
+
 # статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
 # |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
-
-
 def serve_static_file(path, index_file: str):
+    ''' 
+    обработка статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
+    |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
+    '''
     print(path)
     if os.path.isdir(path):
         index_file = os.path.join(path, index_file)
