@@ -1,11 +1,9 @@
-import os
 import socket
 import threading
 import json
 from select import select
 from src.virtual_server_manager import VirtualServerManager
 from src.http_server import handle_client
-from functools import lru_cache
 
 
 def load_config():
@@ -46,64 +44,6 @@ def run_server() -> None:
         thread.start()
         cid += 1
 
-# статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
-# |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
-
-@lru_cache(maxsize=52)
-def get_content(path):
-    with open(path, "rb") as f:
-        return f.read()
-
-def serve_static_file(path):
-    
-    if os.path.isdir(path):
-            return generate_directory_listing(path)
-    
-    content = get_content(path)
-    if not content:
-        return "HTTP/1.1 404"
-    
-    content_type = None
-    if path.endswith('.html'):
-        content_type = 'text/html'
-    elif path.endswith('.css'):
-        content_type = 'text/css'
-    elif path.endswith('.js'):
-        content_type = 'application/javascript'
-    elif path.endswith('.png'):
-        content_type = 'image/png'
-    elif path.endswith('.jpg') or path.endswith('.jpeg'):
-        content_type = 'image/jpeg'
-
-    return (
-            f"HTTP/1.1 200 OK\r\n"
-            f"Content-Type: {content_type}\r\n"
-            f"Content-Length: {len(content)}\r\n"
-            f"\r\n".encode() + content
-    )
-    
-def generate_directory_listing(directory_path):
-    try:
-        files = os.listdir(directory_path)
-        html = f"<html><head><title>Index of {directory_path}</title></head><body><h1>Index of {directory_path}</h1><ul>"
-        for f in files:
-            full_path = os.path.join(directory_path, f)
-            if os.path.isdir(full_path):
-                f += "/"
-            html += f'<li><a href="{f}">{f}</a></li>'
-        html += "</ul></body></html>"
-        
-        return (
-            f"HTTP/1.1 200 OK\r\n"
-            f"Content-Type: text/html\r\n"
-            f"Content-Length: {len(html)}\r\n"
-            f"\r\n{html}".encode()
-        )
-    except OSError:
-        return "HTTP/1.1 403 Forbidden\r\n\r\n".encode()   
-    
-     
-
 
 def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerManager):
     try:
@@ -115,7 +55,7 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
             break
         else:
             print(client_socket)
-            handle_client(client_socket)
+            handle_client(client_socket, request)
 
 
 
@@ -125,7 +65,7 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
         raise   
         
 
-def read_request(client_socket: socket, cid: int, delimiter=b"!") -> bytearray:
+def read_request(client_socket: socket, cid: int, delimiter=b"") -> bytearray:
     request = bytearray()
     try:
         while True:
