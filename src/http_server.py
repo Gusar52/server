@@ -140,7 +140,7 @@ def serve_static_file(path):
         f"HTTP/1.1 200 OK\r\n"
         f"Content-Type: {content_type}\r\n"
         f"Content-Length: {len(content)}\r\n"
-        f"\r\n" + content
+        f"\r\n" + content.decode()
     )
 
 
