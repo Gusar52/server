@@ -1,7 +1,7 @@
-from functools import lru_cache
-import socket
 import os
+import socket
 import sys
+from functools import lru_cache
 
 directory = "."
 
@@ -28,7 +28,7 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
         response = "HTTP/1.1 200 OK\r\n\r\n"
 
     if method == "POST" and path.startswith("/files/"):
-        filename = path[len("/files/"):]
+        filename = path[len("/files/") :]
         file_path = os.path.join(directory, filename)
         content_length = int(headers.get("Content-Length", "0"))
         body = request_data.split("\r\n\r\n", 1)[1]
@@ -45,7 +45,7 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
 
         try:
 
-            filename = path[len("/files/"):]
+            filename = path[len("/files/") :]
             file_path = os.path.join(directory, filename)
 
             if os.path.isfile(file_path):
@@ -69,7 +69,7 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
             print("Error:", e)
 
     elif path.startswith("/echo/"):
-        echo_str = path[len("/path/"):]
+        echo_str = path[len("/path/") :]
         content_length = len(echo_str)
         response = (
             "HTTP/1.1 200 OK\r\n"
@@ -91,11 +91,11 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
         )
 
     else:
-        root = server_config['root']
-        file_path = root +  os.path.join(directory, path.lstrip('/'))
+        root = server_config["root"]
+        file_path = root + os.path.join(directory, path.lstrip("/"))
         print(f"-----------------------{file_path}-----------------------")
         if os.path.exists(file_path):
-            response = serve_static_file(file_path, server_config['index'])
+            response = serve_static_file(file_path, server_config["index"])
         else:
             response = (
                 "HTTP/1.1 404 Not Found\r\n"
@@ -112,15 +112,15 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
 def get_content(path):
     with open(path, "rb") as f:
         return f.read()
-    
+
 
 # статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
 # |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
 def serve_static_file(path, index_file: str):
-    ''' 
+    """
     обработка статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
     |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
-    '''
+    """
     print(path)
     if os.path.isdir(path):
         index_file = os.path.join(path, index_file)
@@ -139,16 +139,16 @@ def serve_static_file(path, index_file: str):
         return "HTTP/1.1 404"
 
     content_type = None
-    if path.endswith('.html'):
-        content_type = 'text/html'
-    elif path.endswith('.css'):
-        content_type = 'text/css'
-    elif path.endswith('.js'):
-        content_type = 'application/javascript'
-    elif path.endswith('.png'):
-        content_type = 'image/png'
-    elif path.endswith('.jpg') or path.endswith('.jpeg'):
-        content_type = 'image/jpeg'
+    if path.endswith(".html"):
+        content_type = "text/html"
+    elif path.endswith(".css"):
+        content_type = "text/css"
+    elif path.endswith(".js"):
+        content_type = "application/javascript"
+    elif path.endswith(".png"):
+        content_type = "image/png"
+    elif path.endswith(".jpg") or path.endswith(".jpeg"):
+        content_type = "image/jpeg"
 
     return (
         f"HTTP/1.1 200 OK\r\n"

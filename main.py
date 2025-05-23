@@ -1,14 +1,15 @@
+import json
 import socket
 import threading
-import json
 from select import select
-from src.virtual_server_manager import VirtualServerManager
+
 from src.http_server import handle_client
+from src.virtual_server_manager import VirtualServerManager
 
 
 def load_config():
     try:
-        with open('config.json', 'r') as f:
+        with open("config.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
         raise ("Файл конфигурации не найден")
@@ -19,11 +20,13 @@ def run_server() -> None:
     server_manager = VirtualServerManager(config)
 
     server_sockets = []
-    for server_config in config['server']:
-        port = server_config['port']
+    for server_config in config["server"]:
+        port = server_config["port"]
         if port not in server_sockets:
-            server_sockets.append(create_server_socket(server_config['host'], port))
-            print(f"Сервер {server_config['server_name']} запущен на {server_config['host']}:{server_config['port']}")
+            server_sockets.append(create_server_socket(server_config["host"], port))
+            print(
+                f"Сервер {server_config['server_name']} запущен на {server_config['host']}:{server_config['port']}"
+            )
 
     cid = 0
 
@@ -31,7 +34,9 @@ def run_server() -> None:
         read_sockets, _, _ = select(list(server_sockets), [], [])
         for server_socket in read_sockets:
             client_socket = accept_client_connection(server_socket, cid)
-            thread = threading.Thread(target=serve_client, args=(client_socket, cid, server_manager))
+            thread = threading.Thread(
+                target=serve_client, args=(client_socket, cid, server_manager)
+            )
         thread.start()
         cid += 1
 
@@ -42,11 +47,11 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
             request = read_request(client_socket, cid)
             request_str = request.decode()
             headers = {}
-            for line in request_str.split('\r\n')[1:]:
-                if ': ' in line:
-                    key, value = line.split(': ', 1)
+            for line in request_str.split("\r\n")[1:]:
+                if ": " in line:
+                    key, value = line.split(": ", 1)
                     headers[key] = value
-            server_name = headers.get('Host', '').split(':')[0]
+            server_name = headers.get("Host", "").split(":")[0]
             server_config = server_manager.find_server(server_name)
             if request is None:
                 print(f"Client #{cid} disconnected")
