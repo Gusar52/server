@@ -27,17 +27,17 @@ def run_server() -> None:
     config = load_config()
     server_manager = VirtualServerManager(config)
     
-    server_sockets = {}
+    server_sockets = []
     for server_config in config['server']:
         port = server_config['port']
         if port not in server_sockets:
-            server_sockets[port] = create_server_socket(server_config['host'], port)
+            server_sockets.append(create_server_socket(server_config['host'], port))
             print(f"Сервер запущен на {server_config['host']}:{server_config['port']}")
     
     cid = 0
 
     while True:
-        read_sockets, _, _ = select(list(server_sockets.values()), [], [])
+        read_sockets, _, _ = select(list(server_sockets), [], [])
         for server_socket in read_sockets:
             client_socket = accept_client_connection(server_socket, cid)
             thread = threading.Thread(target=serve_client, args=(client_socket, cid, server_manager))
@@ -46,16 +46,30 @@ def run_server() -> None:
 
 
 def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerManager):
-    try:
-      while True:
-        request = read_request(client_socket, cid)
-        if request is None:
-            print(f"Client #{cid} disconnected")
-            client_socket.close()
-            break
-        else:
-            print(client_socket)
-            handle_client(client_socket, request)
+    try:        
+        while True:
+            request = read_request(client_socket, cid)
+            request_str = request.decode()
+            headers = {}
+            for line in request_str.split('\r\n')[1:]:
+                if ': ' in line:
+                    key, value = line.split(': ', 1)
+                    headers[key] = value
+            # print(f"---------------------{headers}--------------------------")
+            server_name = headers.get('Host', '').split(':')[0]
+            server_config = server_manager.find_server(server_name)
+            if request is None:
+                print(f"Client #{cid} disconnected")
+                client_socket.close()
+                break
+            else:
+                if server_config:
+                    print(f"Найден виртуальный сервер: {server_config['server_name']}")
+                    handle_client(client_socket, request, server_config)
+                else:
+                    print(f"Виртуальный сервер не найден для {server_name}")
+                    response = "HTTP/1.1 404 Not Found\r\n\r\n"
+                    client_socket.sendall(response.encode())
 
 
 

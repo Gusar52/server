@@ -11,7 +11,7 @@ if "--directory" in sys.argv:
         directory = sys.argv[idx + 1]
 
 
-def handle_client(client_socket: socket, request: bytearray):
+def handle_client(client_socket: socket, request: bytearray, server_config: dict):
     print("----handle Client----")
     request_data = request.decode()
     lines = request_data.split("\r\n")
@@ -92,9 +92,11 @@ def handle_client(client_socket: socket, request: bytearray):
 
     else:
         # Пробуем обработать как статический файл
-        file_path = os.path.join(directory, path.lstrip('/'))
+        root = server_config['root']
+        file_path = root +  os.path.join(directory, path.lstrip('/'))
+        print(f"-----------------------{file_path}-----------------------")
         if os.path.exists(file_path):
-            response = serve_static_file(file_path)
+            response = serve_static_file(file_path, server_config['index'])
         else:
             response = (
                 "HTTP/1.1 404 Not Found\r\n"
@@ -115,10 +117,10 @@ def get_content(path):
 # |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
 
 
-def serve_static_file(path):
+def serve_static_file(path, index_file: str):
     print(path)
     if os.path.isdir(path):
-        index_file = os.path.join(path, "index.html")
+        index_file = os.path.join(path, index_file)
         if os.path.isfile(index_file):
             content = get_content(index_file)
             return (
