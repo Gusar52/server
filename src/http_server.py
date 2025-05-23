@@ -118,6 +118,15 @@ def get_content(path):
 def serve_static_file(path):
     print(path)
     if os.path.isdir(path):
+        index_file = os.path.join(path, "index.html")
+        if os.path.isfile(index_file):
+            content = get_content(index_file)
+            return (
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/html\r\n"
+                f"Content-Length: {len(content)}\r\n"
+                "\r\n" + content.decode()
+            )
         return generate_directory_listing(path)
 
     content = get_content(path)
