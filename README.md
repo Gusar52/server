@@ -33,6 +33,7 @@ python main.py --help
 ```
 
 ## Project structure
+```
 server/
 ├── src/
 │   ├── http_server.py       
@@ -40,6 +41,7 @@ server/
 ├── main.py
 ├── config.json
 └── requirements.txt
+```
 
 ## Testing
 ```bash 
