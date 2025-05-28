@@ -8,6 +8,8 @@ from src.virtual_server_manager import VirtualServerManager
 
 
 def load_config():
+    """Загружает конфигурацию"""
+
     try:
         with open("config.json", "r") as f:
             return json.load(f)
@@ -16,6 +18,9 @@ def load_config():
 
 
 def run_server() -> None:
+    """ Создает сокеты для каждого уникального порта
+    Запускает основной цикл обработки соединений"""
+
     config = load_config()
     server_manager = VirtualServerManager(config)
 
@@ -42,6 +47,10 @@ def run_server() -> None:
 
 
 def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerManager):
+    """ Обрабатывает клиентское соединение
+    Анализирует заголовок Host для определения виртуального хоста
+    Перенаправляет запрос на соответствующий обработчик"""
+
     try:
         while True:
             request = read_request(client_socket, cid)
@@ -73,6 +82,9 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
 
 
 def read_request(client_socket: socket, cid: int, delimiter=b"") -> bytearray:
+    """ Читает HTTP-запрос от клиента
+    Логирует полученные данные"""
+
     request = bytearray()
     try:
         while True:
@@ -91,6 +103,9 @@ def read_request(client_socket: socket, cid: int, delimiter=b"") -> bytearray:
 
 
 def create_server_socket(host: str, port: int) -> socket:
+    """ Создает и настраивает серверный сокет
+    Обрабатывает ошибки занятого порта"""
+
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, proto=0)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
@@ -105,10 +120,25 @@ def create_server_socket(host: str, port: int) -> socket:
 
 
 def accept_client_connection(server_socket: socket, cid: int) -> socket:
+    """ Принимает новое соединение
+    Логирует информацию о клиенте"""
+    
     client_socket, client_addres = server_socket.accept()
     print(f"Client #{cid} conected\n {client_addres[0]}:{client_addres[1]}")
     return client_socket
 
+def show_help():
+    """Выводит документацию модуля и его функций"""
+    print("\nДоступные функции:")
+    print(f"{'run_server():':<20} {run_server.__doc__.strip()}")
+    print(f"{'serve_client():':<20} {serve_client.__doc__.strip()}")
+    print(f"{'read_request():':<20} {read_request.__doc__.strip()}")
+    print(f"{'create_server_socket():':<20} {create_server_socket.__doc__.strip()}")
+    print(f"{'accept_client_connection():':<20} {accept_client_connection.__doc__.strip()}")
 
 if __name__ == "__main__":
-    run_server()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--help":
+        show_help()
+    else:
+        run_server()
