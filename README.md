@@ -35,11 +35,11 @@ python main.py --help
 ## Project structure
 server/
 ├── src/
-│   ├── http_server.py        # Core server logic
-│   └── virtual_server_manager.py  # Virtual hosts management
-├── main.py                   # Entry point
-├── config.json               # Server configuration
-└── requirements.txt          # Dependencies
+│   ├── http_server.py       
+│   └── virtual_server_manager.py 
+├── main.py
+├── config.json
+└── requirements.txt
 
 ## Testing
 ```bash 
