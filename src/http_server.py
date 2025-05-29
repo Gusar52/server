@@ -2,6 +2,7 @@ import os
 import socket
 import sys
 from functools import lru_cache
+import urllib.parse
 
 directory = "."
 
@@ -11,8 +12,38 @@ if "--directory" in sys.argv:
         directory = sys.argv[idx + 1]
 
 
+def handle_proxy_request(client_socket: socket, request: bytearray, proxy_pass: str):
+    try:
+        parsed_url = urllib.parse.urlparse(proxy_pass)
+        proxy_host = parsed_url.hostname
+        proxy_port = parsed_url.port or 80
+
+        proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        proxy_socket.connect((proxy_host, proxy_port))        
+        
+        proxy_socket.sendall(request)
+        
+        response = bytearray()
+        while True:
+            data = proxy_socket.recv(4096)
+            if not data:
+                break
+            response.extend(data)
+        
+        client_socket.sendall(response)
+        proxy_socket.close()
+        
+    except Exception as e:
+        print(f"Ошибка проксирования: {e}")
+        error_response = "HTTP/1.1 502 Bad Gateway\r\n\r\n"
+        client_socket.sendall(error_response.encode())
+
 def handle_client(client_socket: socket, request: bytearray, server_config: dict):
-    print("----handle Client----")
+    print("----handle Client----")    
+    if "proxy_pass" in server_config:
+        handle_proxy_request(client_socket, request, server_config["proxy_pass"])
+        return
+
     request_data = request.decode()
     lines = request_data.split("\r\n")
     request_line = lines[0]

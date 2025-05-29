@@ -54,6 +54,11 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
     try:
         while True:
             request = read_request(client_socket, cid)
+            if not request :
+                print("Client #{cid} disconnected")
+                client_socket.close()
+                break
+
             request_str = request.decode()
             headers = {}
             for line in request_str.split("\r\n")[1:]:
@@ -62,18 +67,14 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
                     headers[key] = value
             server_name = headers.get("Host", "").split(":")[0]
             server_config = server_manager.find_server(server_name)
-            if request is None:
-                print(f"Client #{cid} disconnected")
-                client_socket.close()
-                break
+
+            if server_config:
+                print(f"Найден виртуальный сервер: {server_config['server_name']}")
+                handle_client(client_socket, request, server_config)
             else:
-                if server_config:
-                    print(f"Найден виртуальный сервер: {server_config['server_name']}")
-                    handle_client(client_socket, request, server_config)
-                else:
-                    print(f"Виртуальный сервер не найден для {server_name}")
-                    response = "HTTP/1.1 404 Not Found\r\n\r\n"
-                    client_socket.sendall(response.encode())
+                print(f"Виртуальный сервер не найден для {server_name}")
+                response = "HTTP/1.1 404 Not Found\r\n\r\n"
+                client_socket.sendall(response.encode())
 
     except ConnectionResetError:
         return None
@@ -91,7 +92,7 @@ def read_request(client_socket: socket, cid: int, delimiter=b"") -> bytearray:
             request_data = client_socket.recv(1024)
             print(f"\n[Client #{cid}] REQUEST:\n{request_data.decode()}\n")
             if not request_data:
-                return None
+                return request
             request += request_data
             if delimiter in request:
                 return request
