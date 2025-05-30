@@ -61,34 +61,44 @@ class ServerTestCase(unittest.TestCase):
         test_file = "static/aboba2.txt"
         with open(test_file, "w") as f:
             f.write("First version")
-        response1 = requests.get(f"http://localhost:8080/static/aboba2.txt")
+        _ = requests.get("http://localhost:8080/static/aboba2.txt")
         with open(test_file, "w") as f:
             f.write("Second version")
-        response2 = requests.get(f"http://localhost:8080/static/aboba2.txt")
+        response2 = requests.get("http://localhost:8080/static/aboba2.txt")
         self.assertEqual(response2.text, "Second version")
 
     def test_virtual_servers(self):
         """тест работы виртуальных серверов"""
 
-        response1 = requests.get("http://localhost:8080/", headers={"Host": "localhost"})
+        response1 = requests.get(
+            "http://localhost:8080/", headers={"Host": "localhost"}
+        )
         print("-------------------------------re----------------------------------")
         print(response1.text)
         self.assertEqual(response1.status_code, 200)
-        self.assertEqual(response1.text, """<html>
+        self.assertEqual(
+            response1.text,
+            """<html>
     <head>
         <meta charset="utf-8">
     </head>
     <body>запущен Test1</body>
-</html>""")
+</html>""",
+        )
 
-        response2 = requests.get("http://localhost:8080/", headers={"Host": "Test2.com"})
+        response2 = requests.get(
+            "http://localhost:8080/", headers={"Host": "Test2.com"}
+        )
         self.assertEqual(response2.status_code, 200)
-        self.assertEqual(response2.text, """<html>
+        self.assertEqual(
+            response2.text,
+            """<html>
     <head>
         <meta charset="utf-8">
     </head>
     <body>запущен Test2</body>
-</html>""")
+</html>""",
+        )
 
     def test_proxy_pass(self):
         """тест работы proxy pass"""
@@ -104,8 +114,7 @@ class ServerTestCase(unittest.TestCase):
 
             # Тест проксирования запроса
             response = requests.get(
-                "http://localhost:8080/test_static/",
-                headers={"Host": "proxy.com"}
+                "http://localhost:8080/test_static/", headers={"Host": "proxy.com"}
             )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.text, "Proxy test content")
@@ -121,8 +130,7 @@ class ServerTestCase(unittest.TestCase):
     def test_invalid_virtual_server(self):
         """тест обработки несуществующего виртуального сервера"""
         response = requests.get(
-            "http://localhost:8080/nonexistent.txt",
-            headers={"Host": "nonexistent.com"}
+            "http://localhost:8080/nonexistent.txt", headers={"Host": "nonexistent.com"}
         )
         self.assertEqual(response.status_code, 404)
 
