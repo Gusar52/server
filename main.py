@@ -2,19 +2,20 @@ import json
 import socket
 import threading
 from select import select
+from typing import Dict, List, Optional, Union, Any
 
 from src.http_server import handle_client
 from src.virtual_server_manager import VirtualServerManager
 
 
-def load_config():
+def load_config() -> Any:
     """Загружает конфигурацию"""
 
     try:
         with open("config.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        raise ("Файл конфигурации не найден")
+        raise FileNotFoundError("Файл конфигурации не найден")
 
 
 def run_server() -> None:
@@ -46,7 +47,7 @@ def run_server() -> None:
         cid += 1
 
 
-def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerManager):
+def serve_client(client_socket: socket.socket, cid: int, server_manager: VirtualServerManager) -> None:
     """Обрабатывает клиентское соединение
     Анализирует заголовок Host для определения виртуального хоста
     Перенаправляет запрос на соответствующий обработчик"""
@@ -80,7 +81,7 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
         return None
 
 
-def read_request(client_socket: socket, cid: int, delimiter=b"") -> bytearray:
+def read_request(client_socket: socket.socket, cid: int, delimiter: bytes = b"") -> Optional[bytearray]:
     """Читает HTTP-запрос от клиента
     Логирует полученные данные"""
 
@@ -101,7 +102,7 @@ def read_request(client_socket: socket, cid: int, delimiter=b"") -> bytearray:
         raise
 
 
-def create_server_socket(host: str, port: int) -> socket:
+def create_server_socket(host: str, port: int) -> socket.socket:
     """Создает и настраивает серверный сокет
     Обрабатывает ошибки занятого порта"""
 
@@ -118,7 +119,7 @@ def create_server_socket(host: str, port: int) -> socket:
         return create_server_socket(host, port + 1)
 
 
-def accept_client_connection(server_socket: socket, cid: int) -> socket:
+def accept_client_connection(server_socket: socket.socket, cid: int) -> socket.socket:
     """Принимает новое соединение
     Логирует информацию о клиенте"""
 
@@ -127,16 +128,14 @@ def accept_client_connection(server_socket: socket, cid: int) -> socket:
     return client_socket
 
 
-def show_help():
+def show_help() -> None:
     """Выводит документацию модуля и его функций"""
     print("\nДоступные функции:")
-    print(f"{'run_server():':<20} {run_server.__doc__.strip()}")
-    print(f"{'serve_client():':<20} {serve_client.__doc__.strip()}")
-    print(f"{'read_request():':<20} {read_request.__doc__.strip()}")
-    print(f"{'create_server_socket():':<20} {create_server_socket.__doc__.strip()}")
-    print(
-        f"{'accept_client_connection():':<20} {accept_client_connection.__doc__.strip()}"
-    )
+    print(f"{'run_server():':<20} {run_server.__doc__ or ''}")
+    print(f"{'serve_client():':<20} {serve_client.__doc__ or ''}")
+    print(f"{'read_request():':<20} {read_request.__doc__ or ''}")
+    print(f"{'create_server_socket():':<20} {create_server_socket.__doc__ or ''}")
+    print(f"{'accept_client_connection():':<20} {accept_client_connection.__doc__ or ''}")
 
 
 if __name__ == "__main__":

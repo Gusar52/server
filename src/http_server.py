@@ -3,6 +3,7 @@ import socket
 import sys
 import urllib.parse
 from functools import lru_cache
+from typing import Dict, Any, Optional, Union, List
 
 directory = "."
 
@@ -12,7 +13,7 @@ if "--directory" in sys.argv:
         directory = sys.argv[idx + 1]
 
 
-def handle_proxy_request(client_socket: socket, request: bytearray, proxy_pass: str):
+def handle_proxy_request(client_socket: socket.socket, request: bytearray, proxy_pass: str) -> None:
     try:
         parsed_url = urllib.parse.urlparse(proxy_pass)
         proxy_host = parsed_url.hostname
@@ -39,7 +40,7 @@ def handle_proxy_request(client_socket: socket, request: bytearray, proxy_pass: 
         client_socket.sendall(error_response.encode())
 
 
-def handle_client(client_socket: socket, request: bytearray, server_config: dict):
+def handle_client(client_socket: socket.socket, request: bytearray, server_config: Dict[str, Any]) -> None:
     print("----handle Client----")
     if "proxy_pass" in server_config:
         handle_proxy_request(client_socket, request, server_config["proxy_pass"])
@@ -90,8 +91,8 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
                     "Content-Type: application/octet-stream\r\n"
                     f"Content-Length: {len(content)}\r\n"
                     "\r\n"
-                ).encode() + content
-                client_socket.send(response)
+                ) + content.decode()
+                client_socket.sendall(response.encode())
                 client_socket.close()
                 return
             else:
@@ -141,14 +142,14 @@ def handle_client(client_socket: socket, request: bytearray, server_config: dict
 
 
 @lru_cache(maxsize=52)
-def get_content(path):
+def get_content(path: str) -> bytes:
     with open(path, "rb") as f:
         return f.read()
 
 
 # статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
 # |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
-def serve_static_file(path, index_file: str):
+def serve_static_file(path: str, index_file: str) -> str:
     """
     обработка статика в класическом виде jpg|jpeg|gif|png|ico|css|zip|tgz|gz|rar|bz2
     |doc|xls|exe|pdf|ppt|txt|tar|mid|midi|wav|bmp|rtf|js|swf|flv|mp3
@@ -190,7 +191,7 @@ def serve_static_file(path, index_file: str):
     )
 
 
-def generate_directory_listing(directory_path):
+def generate_directory_listing(directory_path: str) -> str:
     try:
         files = os.listdir(directory_path)
         html = f"""<html><head><title>Index of
