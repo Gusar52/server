@@ -77,8 +77,9 @@ def serve_client(client_socket: socket, cid: int, server_manager: VirtualServerM
                 client_socket.sendall(response.encode())
 
     except ConnectionResetError:
-        return None
-    except:
+        return
+    except Exception as e:
+        print(f"Ошибка при обработке клиента #{cid}: {e}")
         raise
 
 
@@ -123,10 +124,11 @@ def create_server_socket(host: str, port: int) -> socket:
 def accept_client_connection(server_socket: socket, cid: int) -> socket:
     """ Принимает новое соединение
     Логирует информацию о клиенте"""
-    
+
     client_socket, client_addres = server_socket.accept()
     print(f"Client #{cid} conected\n {client_addres[0]}:{client_addres[1]}")
     return client_socket
+
 
 def show_help():
     """Выводит документацию модуля и его функций"""
@@ -136,6 +138,7 @@ def show_help():
     print(f"{'read_request():':<20} {read_request.__doc__.strip()}")
     print(f"{'create_server_socket():':<20} {create_server_socket.__doc__.strip()}")
     print(f"{'accept_client_connection():':<20} {accept_client_connection.__doc__.strip()}")
+
 
 if __name__ == "__main__":
     import sys

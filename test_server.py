@@ -61,10 +61,9 @@ class ServerTestCase(unittest.TestCase):
         test_file = "static/aboba2.txt"
         with open(test_file, "w") as f:
             f.write("First version")
-        response1 = requests.get(f"http://localhost:8080/static/aboba2.txt")
         with open(test_file, "w") as f:
             f.write("Second version")
-        response2 = requests.get(f"http://localhost:8080/static/aboba2.txt")
+        response2 = requests.get("http://localhost:8080/static/aboba2.txt")
         self.assertEqual(response2.text, "Second version")
 
     def test_virtual_servers(self):

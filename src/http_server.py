@@ -19,27 +19,28 @@ def handle_proxy_request(client_socket: socket, request: bytearray, proxy_pass: 
         proxy_port = parsed_url.port or 80
 
         proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        proxy_socket.connect((proxy_host, proxy_port))        
-        
+        proxy_socket.connect((proxy_host, proxy_port))
+
         proxy_socket.sendall(request)
-        
+
         response = bytearray()
         while True:
             data = proxy_socket.recv(4096)
             if not data:
                 break
             response.extend(data)
-        
+
         client_socket.sendall(response)
         proxy_socket.close()
-        
+
     except Exception as e:
         print(f"Ошибка проксирования: {e}")
         error_response = "HTTP/1.1 502 Bad Gateway\r\n\r\n"
         client_socket.sendall(error_response.encode())
 
+
 def handle_client(client_socket: socket, request: bytearray, server_config: dict):
-    print("----handle Client----")    
+    print("----handle Client----")
     if "proxy_pass" in server_config:
         handle_proxy_request(client_socket, request, server_config["proxy_pass"])
         return
@@ -192,7 +193,15 @@ def serve_static_file(path, index_file: str):
 def generate_directory_listing(directory_path):
     try:
         files = os.listdir(directory_path)
-        html = f"<html><head><title>Index of {directory_path}</title></head><body><h1>Index of {directory_path}</h1><ul>"
+        html = f"""
+            <html>
+            <head>
+                <title>Index of {directory_path}</title>
+            </head>
+            <body>
+                <h1>Index of {directory_path}</h1>
+                <ul>
+        """
         for f in files:
             full_path = os.path.join(directory_path, f)
             if os.path.isdir(full_path):
